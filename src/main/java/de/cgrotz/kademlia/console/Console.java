@@ -5,10 +5,16 @@ import de.cgrotz.kademlia.config.UdpListener;
 import de.cgrotz.kademlia.events.Event;
 import de.cgrotz.kademlia.node.Key;
 import de.cgrotz.kademlia.node.Node;
+import org.mapdb.DB;
+import org.mapdb.DBMaker;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -36,9 +42,15 @@ public class Console implements Consumer<Event> {
     private final Kademlia kademlia;
 
     private final Map<String, Function<String[], String>> commands = new HashMap<>();
+    private final MessageDigest digest;
 
-    public Console( Kademlia kademlia ) {
+    public Console(Kademlia kademlia, DB db) {
         this.kademlia = kademlia;
+        try {
+            this.digest = MessageDigest.getInstance("SHA-256");
+        } catch (NoSuchAlgorithmException e) {
+            throw new RuntimeException(e);
+        }
 
         this.commands.put("HELP", (args) -> "Available Commands: \r\n HELP\t This page");
         this.commands.put("BOOTSTRAP", (args) -> {
@@ -59,8 +71,27 @@ public class Console implements Consumer<Event> {
             kademlia.put(Key.build(args[1]), args[2]);
             return "Stored value";
         });
+        this.commands.put("PUT", (args) -> {
+            if(args.length > 2) {
+                Key key = Key.build(args[1]);
+                kademlia.put(key, args[2]);
+                return "Stored value at "+key;
+            }
+            else {
+                byte[] hash = digest.digest(args[1].getBytes(StandardCharsets.UTF_8));
+                Key key = new Key(Arrays.copyOfRange(hash, 0, 160/8));
+                kademlia.put(key, args[1]);
+                return "Stored value at "+key;
+            }
+        });
         this.commands.put("GET", (args) -> {
             return kademlia.get(Key.build(args[1]));
+        });
+        this.commands.put("EXIT", (args) -> {
+           db.close();
+           kademlia.close();
+           Runtime.getRuntime().exit(1);
+           return "closing";
         });
     }
 
