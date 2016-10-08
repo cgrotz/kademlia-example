@@ -10,7 +10,7 @@
 
     <groupId>de.cgrotz</groupId>
     <artifactId>kademlia-example</artifactId>
-    <version>1.0.2-SNAPSHOT</version>
+    <version>1.0.1-SNAPSHOT</version>
     <name>kademlia</name>
     <description>Kademlia Node implementation</description>
     <url>https://github.com/cgrotz/kademlia-example</url>
@@ -40,7 +40,7 @@
         <dependency>
             <groupId>de.cgrotz</groupId>
             <artifactId>kademlia</artifactId>
-            <version>1.0.2-SNAPSHOT</version>
+            <version>1.0.1-SNAPSHOT</version>
         </dependency>
 <!--
         <dependency>
